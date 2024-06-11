@@ -6,10 +6,12 @@ This project demonstrates a basic interface between the VSD Squadron Mini Board 
 ## 1. Components Needed  
 
 1. CH32V003F4U6 Microcontroller  
-2. 128x64 OLED Display (I2C)  
-3. Power Supply  
-4. Resistors, Capacitors, and Wires  
-5. Breadboard and Connectors  
+2. 128x64 OLED Display (I2C)
+      - OLED stands for **Organic Light Emitting Diodes**. Unlike traditional LED displays which require a backlight, OLED displays consist of individual **organic molecules** that light up when an electric current is applied. This leads to displays that are thinner, lighter, and offer better contrast ratios compared to LCDs.
+      - An OLED is a type of diode that consists of an organic compound that emits light when current flows through it.
+4. Power Supply  
+5. Resistors, Capacitors, and Wires  
+6. Breadboard and Connectors  
 
 ## 2. Circuit Design  
 
@@ -185,7 +187,7 @@ int main(void) {
 ## 5. Explanation  
 ### 5.1 I2C Initialization:  
 
-1. Configures GPIO pins PB6 and PB7 for I2C communication.
+1. Configures GPIO pins PD6 and PD7 for I2C communication.
 2. Initializes I2C1 with a clock speed of 100kHz.
 
 ### 5.2 OLED Initialization:  
