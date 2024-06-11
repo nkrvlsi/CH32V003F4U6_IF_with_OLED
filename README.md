@@ -4,6 +4,7 @@
 This project demonstrates a basic interface between the VSD Squadron Mini Board and OLED. Here we are using the CH32V003F4U6 microcontroller to interface with a 128x64 OLED display using the I2C protocol.  
 
 ## 1. Components Needed  
+
 1. CH32V003F4U6 Microcontroller  
 2. 128x64 OLED Display (I2C)  
 3. Power Supply  
@@ -11,17 +12,20 @@ This project demonstrates a basic interface between the VSD Squadron Mini Board 
 5. Breadboard and Connectors  
 
 ## 2. Circuit Design  
-1. OLED to CH32V003F4U6: Connect the I2C pins of the OLED display to the corresponding I2C pins of the CH32V003F4U6.  
+
+1. **OLED to CH32V003F4U6:** Connect the I2C pins of the OLED display to the corresponding I2C pins of the CH32V003F4U6.  
    - **SCL** (Serial Clock Line): Connect to PB6 (I2C1_SCL)
    - **SDA** (Serial Data Line): Connect to PB7 (I2C1_SDA)
    - **VCC**: Connect to 3.3V or 5V depending on your OLED module.
    - **GND**: Connect to GND.  
 
 ## 3. Software Implementation  
+
 1. Initialize the I2C and OLED Display: Set up the I2C interface to communicate with the OLED display.  
 2. Display Data on OLED: Write functions to send data to the OLED display and show text or graphics.  
 
 ## 4. C Source Code  
+
 Here's an implementation in C:  
 
 ```c
