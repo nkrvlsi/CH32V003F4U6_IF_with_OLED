@@ -27,44 +27,45 @@ Here's an example implementation in C:
 ## 5. Explanation  
 ### 5.1 I2C Initialization:  
 
-Configures GPIO pins PB6 and PB7 for I2C communication.
-Initializes I2C1 with a clock speed of 100kHz.
+1. Configures GPIO pins PB6 and PB7 for I2C communication.
+2. Initializes I2C1 with a clock speed of 100kHz.
 
 ### 5.2 OLED Initialization:  
 
-Sends a sequence of commands to initialize the OLED display (based on the SSD1306 controller).
+3. Sends a sequence of commands to initialize the OLED display (based on the SSD1306 controller).
 
 ### 5.3 OLED_WriteCommand:  
 
-Sends a command byte to the OLED display over I2C.
+4. Sends a command byte to the OLED display over I2C.
 
 ### 5.4 OLED_WriteData:
 
-Sends a data byte to the OLED display over I2C.
+5. Sends a data byte to the OLED display over I2C.
 
 ### 5.5 OLED_SetCursor:  
 
-Sets the cursor position on the OLED display.
+6. Sets the cursor position on the OLED display.
 
 ### 5.6 OLED_Clear:  
 
-Clears the OLED display by writing 0x00 to all pixels.
+7. Clears the OLED display by writing 0x00 to all pixels.
 
 ### 5.7 OLED_DisplayString:  
 
-Displays a string on the OLED screen by sending each character as data bytes.
+8. Displays a string on the OLED screen by sending each character as data bytes.
 
 ### 5.8 setup:  
 
-Initializes the I2C interface and the OLED display.
-Clears the OLED display.
+9. Initializes the I2C interface and the OLED display.
+10. Clears the OLED display.
+ 
 ### 5.9 loop:
 
-Displays a string "Hello, OLED!" on the OLED screen, waits for a second, clears the screen, and repeats.
+11. Displays a string "Hello, OLED!" on the OLED screen, waits for a second, clears the screen, and repeats.
 
 ## Notes
-Font Data: In this example, the OLED_DisplayString function directly sends character data, which assumes the OLED can interpret ASCII values. For a more complete implementation, include font data to convert characters to bitmaps.
-Delays: Ensure you have appropriate delay functions (delay and delayMicroseconds). If not available, implement them using timer interrupts.
-OLED Address: The OLED_ADDRESS might differ based on your OLED module. Check your module’s datasheet for the correct address.
-Optimizations: For more efficient display updates, consider implementing a display buffer in RAM and sending the entire buffer to the OLED at once.
+- **Font Data:** In this example, the OLED_DisplayString function directly sends character data, which assumes the OLED can interpret ASCII values. For a more complete implementation, include font data to convert characters to bitmaps.
+- **Delays:** Ensure you have appropriate delay functions (delay and delayMicroseconds). If not available, implement them using timer interrupts.
+- **OLED Address:** The OLED_ADDRESS might differ based on your OLED module. Check your module’s datasheet for the correct address.
+- **Optimizations:** For more efficient display updates, consider implementing a display buffer in RAM and sending the entire buffer to the OLED at once.
 
