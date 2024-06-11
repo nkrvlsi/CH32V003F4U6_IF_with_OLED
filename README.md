@@ -34,47 +34,61 @@ Here's an implementation in C:
 #include <ch32v00x.h>
 #include <stdio.h>
 
-#define I2C_SCL_PIN GPIO_Pin_6
-#define I2C_SDA_PIN GPIO_Pin_7
-#define OLED_ADDRESS 0x3C // Common I2C address for OLED displays
+#define I2C_SCL_PIN GPIO_Pin_2        //PC2 pin 
+#define I2C_SDA_PIN GPIO_Pin_1        //PC1 pin
+#define OLED_ADDRESS 0x3C //0x7A //0x78 //0x3C         // Common I2C address for OLED displays
 
 void I2C1_Init(void) {
-    GPIO_InitTypeDef GPIO_InitStructure;
-    I2C_InitTypeDef I2C_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;        //structure variable GPIO_InitStructure of type GPIO_InitTypeDef, which is used for GPIO configuration.
+    I2C_InitTypeDef I2C_InitStructure;          //structure variable I2C_InitStructure of type I2C_InitTypeDef, which is used for I2C configuration.
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);   //to enable clock for Port D
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);    
+    //enable clocks 
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);   //to enable clock for Port C
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);    //to enable clock for I2C1
 
-    GPIO_InitStructure.GPIO_Pin = I2C_SCL_PIN | I2C_SDA_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOD, &GPIO_InitStructure);
+    //GPIO Configuration
+    GPIO_InitStructure.GPIO_Pin = I2C_SCL_PIN | I2C_SDA_PIN;    //GPIO_Pin: this is to define which Pin, Here we define multiple pins of single port GPIOC
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;             //GPIO_Mode: configure output type. 1. open drain (GPIO_Mode_Out_OD) or 1. push-pull (GPIO_Mode_Out_PP)  AF- Alternate Function OD- Open Drain  PP-Push Pull drive
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;           //GPIO_Speed: 3speeds: GPIO_Speed_10MHz, GPIO_Speed_2MHz, GPIO_Speed_50MHz. This basically configures the drive strength of the GPIO internally.
+    GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-    I2C_InitStructure.I2C_ClockSpeed = 100000;
+    //kk Step 2: Initialize the I2C1 peripheral
+    I2C_DeInit(I2C1); // Reset I2C1 to default state
+
+    //I2C Configuration
+    I2C_InitStructure.I2C_ClockSpeed = 100000; //100KHz =100 * 100 , since 1Khz=100; 100kHz is standard mode
     I2C_InitStructure.I2C_Mode = I2C_Mode_I2C;
-    I2C_InitStructure.I2C_DutyCycle = I2C_DutyCycle_2;
-    I2C_InitStructure.I2C_OwnAddress1 = 0x00;
-    I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;
-    I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
+    I2C_InitStructure.I2C_DutyCycle = I2C_DutyCycle_2;  // 50% duty cycle
+    I2C_InitStructure.I2C_OwnAddress1 = 0x00; //0x78;   //0x00;     // Own address (not used in master mode)
+    I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;         // Enable acknowledge
+    I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;   // 7-bit addressing mode
+    
+     // Initialize I2C1
     I2C_Init(I2C1, &I2C_InitStructure);
-
+    // Enable I2C1
     I2C_Cmd(I2C1, ENABLE);
+    // I2C_AcknowledgeConfig(I2C1, ENABLE);  //kk copied
 }
 
 void OLED_WriteCommand(uint8_t command) {
-    I2C_GenerateSTART(I2C1, ENABLE);
+    // Generate I2C start condition
+    I2C_GenerateSTART(I2C1, ENABLE);    //start bit
     while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT));
 
+    // Send OLED address with write instruction //0-write bit;  1-RD bit;
     I2C_Send7bitAddress(I2C1, OLED_ADDRESS << 1, I2C_Direction_Transmitter);
     while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
 
-    I2C_SendData(I2C1, 0x00);
+    // Send the Control byte (Co = 0, D/C# = 0 for command)
+    I2C_SendData(I2C1, 0x00);       
     while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTING));
 
+    // Send the command byte
     I2C_SendData(I2C1, command);
     while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTING));
 
-    I2C_GenerateSTOP(I2C1, ENABLE);
+    // Generate I2C stop condition
+    I2C_GenerateSTOP(I2C1, ENABLE);     //stop bit
 }
 
 void OLED_WriteData(uint8_t data) {
@@ -94,7 +108,7 @@ void OLED_WriteData(uint8_t data) {
 }
 
 void OLED_Init(void) {
-    OLED_WriteCommand(0xAE); // Display OFF
+    OLED_WriteCommand(0xAE); // Display OFF         //start + 0xA0 (Device Address + RW Bit) + 8/16bit Data + Start + 0xA1 (Device Address + RW Bit) + Read Data + Stop.
 
     OLED_WriteCommand(0x20); // Set Memory Addressing Mode
     OLED_WriteCommand(0x00); // Horizontal addressing mode
@@ -167,21 +181,21 @@ void setup() {
 void loop() {
 
     OLED_SetCursor(0, 0);
-    OLED_DisplayString("Hello, OLED!");
-    Delay_Ms(1000);
+    OLED_DisplayString("Hello, OLED! HOW ARE YOU ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    Delay_Ms(1000);                         // creates no of milliseconds delay
     OLED_Clear();
     Delay_Ms(1000);
 }
 
 int main(void) {
     SystemInit();
+    SystemCoreClockUpdate();
     setup();
 
     while (1) {
         loop();
     }
 }
-
 ```
 
 ## 5. Explanation  
