@@ -21,8 +21,8 @@ This project demonstrates a basic interface between the VSD Squadron Mini Board 
 
 ## 3. Software Implementation  
 
-1. Initialize the I2C and OLED Display: Set up the I2C interface to communicate with the OLED display.  
-2. Display Data on OLED: Write functions to send data to the OLED display and show text or graphics.  
+1. **Initialize the I2C and OLED Display:** Set up the I2C interface to communicate with the OLED display.  
+2. **Display Data on OLED:** Write functions to send data to the OLED display and show text or graphics.  
 
 ## 4. C Source Code  
 
