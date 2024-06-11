@@ -64,8 +64,8 @@ Here's an example implementation in C:
 11. Displays a string "Hello, OLED!" on the OLED screen, waits for a second, clears the screen, and repeats.
 
 ## Notes
-- **Font Data:** In this example, the OLED_DisplayString function directly sends character data, which assumes the OLED can interpret ASCII values. For a more complete implementation, include font data to convert characters to bitmaps.
-- **Delays:** Ensure you have appropriate delay functions (delay and delayMicroseconds). If not available, implement them using timer interrupts.
-- **OLED Address:** The OLED_ADDRESS might differ based on your OLED module. Check your module’s datasheet for the correct address.
+- **Font Data:** In this example, the `OLED_DisplayString function` directly sends character data, which assumes the OLED can interpret ASCII values. For a more complete implementation, include font data to convert characters to bitmaps.
+- **Delays:** Ensure you have appropriate delay functions (`delay` and `delayMicroseconds`). If not available, implement them using timer interrupts.
+- **OLED Address:** The `OLED_ADDRESS` might differ based on your OLED module. Check your module’s datasheet for the correct address.
 - **Optimizations:** For more efficient display updates, consider implementing a display buffer in RAM and sending the entire buffer to the OLED at once.
 
