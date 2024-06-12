@@ -1,4 +1,4 @@
-# Project: CH32V003F4U6_Interface_with_OLED  
+# Project: By using I2C interface between CH32V003F4U6 & SSD-1306 OLED  
 
 # Objective:  
 This project demonstrates a basic interface between the VSD Squadron Mini Board and OLED. Here we are using the CH32V003F4U6 microcontroller to interface with a 128x64 OLED display using the I2C protocol.  
@@ -9,9 +9,8 @@ This project demonstrates a basic interface between the VSD Squadron Mini Board 
 2. 128x64 OLED Display (I2C)
       - OLED stands for **Organic Light Emitting Diodes**. Unlike traditional LED displays which require a backlight, OLED displays consist of individual **organic molecules** that light up when an electric current is applied. This leads to displays that are thinner, lighter, and offer better contrast ratios compared to LCDs.
       - An OLED is a type of diode that consists of an organic compound that emits light when current flows through it.
-4. Power Supply  
-5. Resistors, Capacitors, and Wires  
-6. Breadboard and Connectors  
+4. Power Supply    
+5. Breadboard and Connectors  
 
 ## 2. Circuit Design  
 
