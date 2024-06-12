@@ -1,7 +1,7 @@
 # Project: By using I2C interface between CH32V003F4U6 & SSD-1306 OLED  
 
 # Objective:  
-This project demonstrates a basic interface between the VSD Squadron Mini Board and OLED. Here we are using the CH32V003F4U6 microcontroller to interface with a 128x64 OLED display using the I2C protocol.  
+This project demonstrates a basic interface between the VSD Squadron Mini Board and OLED. Here we are using the CH32V003F4U6 microcontroller to interface with a 128x64 OLED display using the I2C protocol. Our focus is to intialize OLED module with full screen turning-on.
 
 ## 1. Components Needed  
 
