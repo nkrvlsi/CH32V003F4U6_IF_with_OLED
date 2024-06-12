@@ -33,6 +33,8 @@ Here's an implementation in C:
 ```c
 #include <ch32v00x.h>
 #include <stdio.h>
+//#include <oled96.h>
+#include <debug.h>
 
 #define I2C_SCL_PIN GPIO_Pin_2        //PC2 pin 
 #define I2C_SDA_PIN GPIO_Pin_1        //PC1 pin
@@ -56,7 +58,7 @@ void I2C1_Init(void) {
     I2C_DeInit(I2C1); // Reset I2C1 to default state
 
     //I2C Configuration
-    I2C_InitStructure.I2C_ClockSpeed = 100000; //100KHz =100 * 100 , since 1Khz=100; 100kHz is standard mode
+    I2C_InitStructure.I2C_ClockSpeed = 50000; //100000; //100KHz =100 * 100 , since 1Khz=100; 100kHz is standard mode
     I2C_InitStructure.I2C_Mode = I2C_Mode_I2C;
     I2C_InitStructure.I2C_DutyCycle = I2C_DutyCycle_2;  // 50% duty cycle
     I2C_InitStructure.I2C_OwnAddress1 = 0x00; //0x78;   //0x00;     // Own address (not used in master mode)
@@ -76,7 +78,8 @@ void OLED_WriteCommand(uint8_t command) {
     while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT));
 
     // Send OLED address with write instruction //0-write bit;  1-RD bit;
-    I2C_Send7bitAddress(I2C1, OLED_ADDRESS << 1, I2C_Direction_Transmitter);
+    I2C_Send7bitAddress(I2C1, OLED_ADDRESS, I2C_Direction_Transmitter);
+    //I2C_Send7bitAddress(I2C1, OLED_ADDRESS << 1, I2C_Direction_Transmitter);
     while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
 
     // Send the Control byte (Co = 0, D/C# = 0 for command)
@@ -95,7 +98,8 @@ void OLED_WriteData(uint8_t data) {
     I2C_GenerateSTART(I2C1, ENABLE);
     while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT));
 
-    I2C_Send7bitAddress(I2C1, OLED_ADDRESS << 1, I2C_Direction_Transmitter);
+    I2C_Send7bitAddress(I2C1, OLED_ADDRESS, I2C_Direction_Transmitter);
+    //I2C_Send7bitAddress(I2C1, OLED_ADDRESS << 1, I2C_Direction_Transmitter);
     while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
 
     I2C_SendData(I2C1, 0x40);
@@ -107,54 +111,101 @@ void OLED_WriteData(uint8_t data) {
     I2C_GenerateSTOP(I2C1, ENABLE);
 }
 
+//kk modified below values by checking specs
 void OLED_Init(void) {
-    OLED_WriteCommand(0xAE); // Display OFF         //start + 0xA0 (Device Address + RW Bit) + 8/16bit Data + Start + 0xA1 (Device Address + RW Bit) + Read Data + Stop.
+    OLED_WriteCommand(0xAE); // Displady OFF         //start + 0xA0 (Device Address + RW Bit) + 8/16bit Data + Start + 0xA1 (Device Address + RW Bit) + Read Data + Stop.
+    
+    OLED_WriteCommand(0x81); // set Contrast Control
+        OLED_WriteCommand(0xFF);    //contrast value
 
+    OLED_WriteCommand(0xA5); // A5-  Entire Display ON, A4- Output follows RAM content.
+    OLED_WriteCommand(0xA6); // A6- Normal display, A7- Inverse Display
+
+    OLED_WriteCommand(0x21);    // Set Column Address
+        OLED_WriteCommand(0x00); // set Low Column start Address 00~0F
+        OLED_WriteCommand(0x10); // set High Column start Address 10~1F
+    
     OLED_WriteCommand(0x20); // Set Memory Addressing Mode
-    OLED_WriteCommand(0x00); // Horizontal addressing mode
+        OLED_WriteCommand(0x00); // 0x00- Horizontal addressing mode 01- verticle addressing mode 10- page addressing mode
+    
+    OLED_WriteCommand(0x22);    //set page adress
+        OLED_WriteCommand(0xB0); // Set Page Start Address. - for Page Addressing Mode  //Set GDDRAM Page Start Address(PAGE0~PAGE7) for Page Addressing Mode
 
-    OLED_WriteCommand(0xB0); // Set Page Start Address for Page Addressing Mode
+    OLED_WriteCommand(0x40); // Start Line Address      // Set Display Start Line (40h~7Fh) 
+        OLED_WriteCommand(0x00);    //set start address of display ram to 0. and map row-0 to com-0.
 
-    OLED_WriteCommand(0xC8); // COM Output Scan Direction
-    OLED_WriteCommand(0x00); // Low Column Address
-    OLED_WriteCommand(0x10); // High Column Address
-
-    OLED_WriteCommand(0x40); // Start Line Address
-    OLED_WriteCommand(0x81); // Contrast Control
-    OLED_WriteCommand(0xFF);
-
-    OLED_WriteCommand(0xA1); // Segment Re-map
-    OLED_WriteCommand(0xA6); // Normal display
+    OLED_WriteCommand(0xA0); // 0xA0-column address 0 is mapped to SEG0, 0xA1- column address 127 is mapped to SEG0
 
     OLED_WriteCommand(0xA8); // Multiplex Ratio
-    OLED_WriteCommand(0x3F);
+        OLED_WriteCommand(0x3F);    // 64Mux value - setting to max (reset value)
 
-    OLED_WriteCommand(0xA4); // Display Output RAM
-    OLED_WriteCommand(0xD3); // Display Offset
-    OLED_WriteCommand(0x00);
+    OLED_WriteCommand(0xC0); // COM Output Scan Direction   // C0- normal mode (RESET_Value) Scan from COM0 to COM[N –1] , C8-remapped mode. Scan from COM[N-1] to COM0 
 
-    OLED_WriteCommand(0xD5); // Display Clock Divide Ratio
-    OLED_WriteCommand(0xF0);
-
-    OLED_WriteCommand(0xD9); // Pre-charge Period
-    OLED_WriteCommand(0x22);
+    OLED_WriteCommand(0xD3); // Display Offset      //Set vertical shift by COM from 0d~63d 
+        OLED_WriteCommand(0x00);    //Set vertical shift by COM from 0d~63d. reset_value=0
 
     OLED_WriteCommand(0xDA); // COM Pins Hardware Configuration
-    OLED_WriteCommand(0x12);
+        OLED_WriteCommand(0x12);    //A[4]=1b - Alternative COM pin configuration //A[4]=0b-Sequential COM pin configuration, A[5]=1b, Enable COM Left/Right remap //setting to reset_value
+
+    OLED_WriteCommand(0xD5); // Display Clock Divide Ratio //lower 4 bits = A[3:0] = Define the divide ratio (D) of the display clocks (DCLK) Divide_ratio=A[3:0]+1, A[7:4] = Set the Oscillator Frequency Range:0000b~1111b note: Frequency increases as setting value increases.
+        OLED_WriteCommand(0xF0);    
+
+    OLED_WriteCommand(0xD9); // Pre-charge Period
+        OLED_WriteCommand(0x22);        // reset value of above precharge period
 
     OLED_WriteCommand(0xDB); // VCOMH Deselect Level
-    OLED_WriteCommand(0x20);
+        OLED_WriteCommand(0x20);    //0x20 - ~0.77xVcc
 
-    OLED_WriteCommand(0x8D); // Charge Pump Setting
-    OLED_WriteCommand(0x14);
+    OLED_WriteCommand(0x8D); // Charge Pump Setting //Set DC-DC enable
+        OLED_WriteCommand(0x14);        //bit[2] - eanble charge pump
 
-    OLED_WriteCommand(0xAF); // Display ON
+    OLED_WriteCommand(0xAF); // Display ON                      //0xAE: Set display OFF , 0xAF:  Set display ON
 }
 
+
+/* void OLED_Init(void) {
+   
+    OLED_WriteCommand(0xAE); // Display off
+
+    OLED_WriteCommand(0x20); // Set Memory Addressing Mode
+    OLED_WriteCommand(0x00); // 00,Horizontal Addressing Mode; 01,Vertical Addressing Mode; 10,Page Addressing Mode (RESET); 11,Invalid
+
+    OLED_WriteCommand(0x40); // Set start line address
+    OLED_WriteCommand(0x81); // Set contrast control register
+    OLED_WriteCommand(0xFF); // Max contrast
+
+    OLED_WriteCommand(0xA0); // Set segment re-map 0 to 127
+    OLED_WriteCommand(0xA7); // Set normal display
+    OLED_WriteCommand(0xA8); // Set multiplex ratio(1 to 64)
+    OLED_WriteCommand(0x3F); // 1/64 duty
+
+    
+    OLED_WriteCommand(0xD3); // Set display offset
+    OLED_WriteCommand(0x00); // No offset
+
+    OLED_WriteCommand(0xD5); // Set display clock divide ratio/oscillator frequency
+    OLED_WriteCommand(0x10); // Set divide ratio
+
+    OLED_WriteCommand(0xD9); // Set pre-charge period
+    OLED_WriteCommand(0x22);
+    //0xDA, 0x12, 0xDB, 0x20, 0x8D, 0x14, 0x2E, 0xAF
+    OLED_WriteCommand(0xDA); // Set com pins hardware configuration
+    OLED_WriteCommand(0x12);
+
+    OLED_WriteCommand(0xDB); // Set vcomh
+    OLED_WriteCommand(0x20); // 0x20,0.77xVcc
+
+    OLED_WriteCommand(0x8D); // Set DC-DC enable
+    OLED_WriteCommand(0x14);
+    OLED_WriteCommand(0x2E);
+    OLED_WriteCommand(0xAF); // Turn on OLED panel
+	}
+    */
+
 void OLED_SetCursor(uint8_t page, uint8_t column) {
-    OLED_WriteCommand(0xB0 + page);
-    OLED_WriteCommand((column & 0xF0) >> 4 | 0x10);
-    OLED_WriteCommand((column & 0x0F) | 0x01);
+    OLED_WriteCommand(0xB0 + page);                         // Set page start address (0xB0 - 0xB7), //OLED_WriteCommand(0xB0 | (page & 0x07)); //select page_no
+    OLED_WriteCommand(0x00 | (column & 0x0F));              // set lower column start column address between 0x00 to 0x0f // Set column address lower nibble (0x00 - 0x0F)
+    OLED_WriteCommand(0x10 | ((column >> 4) & 0x0F));       // set upper column start column address between 0x10 to 0x1f  // Set column address higher nibble (0x10 - 0x1F)
 }
 
 void OLED_Clear(void) {
@@ -175,13 +226,15 @@ void OLED_DisplayString(char* str) {
 void setup() {
     I2C1_Init();
     OLED_Init();
-    OLED_Clear();
+    //Delay_Ms(1000);
+    //OLED_Clear();
 }
 
 void loop() {
 
-    OLED_SetCursor(0, 0);
-    OLED_DisplayString("Hello, OLED! HOW ARE YOU ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    OLED_SetCursor(0, 0);       // Set cursor to the top-left corner
+        //OLED display message
+    OLED_DisplayString("HELLO");
     Delay_Ms(1000);                         // creates no of milliseconds delay
     OLED_Clear();
     Delay_Ms(1000);
